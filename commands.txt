@@ -1,7 +1,0 @@
-git cherry-pick = to pick specific commits from the branch.
-
-git reset --hard HEAD~1 UNDO THE latest / top commit.
-
-git push --force
-
-git revert < commit - hash > - To undo the commit from origin by pushing a new commit.

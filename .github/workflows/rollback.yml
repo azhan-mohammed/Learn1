@@ -1,0 +1,48 @@
+name: Rollback Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout master
+        run: |
+          git checkout master
+          git pull origin master
+
+      - name: Find Latest Merge Commit
+        id: merge
+        run: |
+          MERGE_HASH=$(git log --first-parent --merges -1 --pretty=format:%H)
+
+          if [ -z "$MERGE_HASH" ]; then
+            echo "No merge commit found."
+            exit 1
+          fi
+
+          echo "Latest Merge Commit: $MERGE_HASH"
+          echo "merge_hash=$MERGE_HASH" >> $GITHUB_OUTPUT
+
+      - name: Revert Latest Merge
+        run: |
+          git revert -m 1 --no-edit ${{ steps.merge.outputs.merge_hash }}
+
+      - name: Push Changes
+        run: |
+          git push origin master
